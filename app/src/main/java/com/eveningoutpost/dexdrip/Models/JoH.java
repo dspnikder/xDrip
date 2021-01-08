@@ -102,7 +102,7 @@ import java.util.zip.Inflater;
 import static android.bluetooth.BluetoothDevice.PAIRING_VARIANT_PIN;
 import static android.content.Context.ALARM_SERVICE;
 import static com.eveningoutpost.dexdrip.stats.StatsActivity.SHOW_STATISTICS_PRINT_COLOR;
-
+//TODO CODE SMELL - REFACTOR
 /**
  * Created by jamorham on 06/01/16.
  * <p>

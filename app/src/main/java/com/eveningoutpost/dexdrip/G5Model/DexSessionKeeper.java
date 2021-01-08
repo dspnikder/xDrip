@@ -17,6 +17,7 @@ public class DexSessionKeeper {
         PersistentStore.setLong(PREF_SESSION_START, 0);
     }
 
+
     public static void setStart(long when) {
         // TODO sanity check
         PersistentStore.setLong(PREF_SESSION_START, when);
