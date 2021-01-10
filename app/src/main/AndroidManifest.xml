@@ -327,24 +327,6 @@
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/device_filter" />
         </activity>
-        <activity
-            android:name=".NFCFilterX"
-            android:configChanges="orientation|screenSize"
-            android:label="xDrip+ NFC"
-            android:launchMode="singleTask">
-            <intent-filter>
-                <action android:name="android.nfc.action.TECH_DISCOVERED" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.nfc.action.TECH_DISCOVERED"
-                android:resource="@xml/nfc_tech_list" />
-        </activity>
-        <activity
-            android:name=".NFCScanningX"
-            android:configChanges="orientation|screenSize"
-            android:label="NFC Scanning"
-            android:launchMode="singleTask" />
 
         <service
             android:name=".Services.DexShareCollectionService"
