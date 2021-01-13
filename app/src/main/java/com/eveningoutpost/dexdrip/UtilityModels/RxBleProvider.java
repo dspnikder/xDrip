@@ -3,6 +3,8 @@ package com.eveningoutpost.dexdrip.UtilityModels;
 
 import com.eveningoutpost.dexdrip.Models.usererror.UserErrorLog;
 import com.eveningoutpost.dexdrip.xdrip;
+import com.polidea.rxandroidble2.LogConstants;
+import com.polidea.rxandroidble2.LogOptions;
 import com.polidea.rxandroidble2.RxBleClient;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +22,13 @@ public class RxBleProvider {
         if (cached != null) return cached;
         //UserErrorLog.wtf("RxBleProvider", "Creating new instance for: " + name); // TODO DEBUG ONLY
         final RxBleClient created = RxBleClient.create(xdrip.getAppContext());
+        /*        RxBleClient.updateLogOptions(new LogOptions.Builder()
+                .setLogLevel(LogConstants.VERBOSE)
+                .setMacAddressLogSetting(LogConstants.MAC_ADDRESS_FULL)
+                .setUuidsLogSetting(LogConstants.UUIDS_FULL)
+                .setShouldLogAttributeValues(true)
+                .build()
+        );*/
         singletons.put(name, created);
         RxJavaPlugins.setErrorHandler(e -> UserErrorLog.d("RXBLE" + name, "RxJavaError: " + e.getMessage()));
         return created;
