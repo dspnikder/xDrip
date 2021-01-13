@@ -242,3 +242,4 @@ public final class Log {
         return 0;
     }
 }
+
