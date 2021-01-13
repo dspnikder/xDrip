@@ -34,7 +34,7 @@ public class UserError extends Model {
     @Column(name = "timestamp", index = true)
     private long timestamp; // Time the error was raised
 
-    UserError() {}
+    public UserError() {}
 
     UserError(UserEvent eventType, String shortMsg, String longMessage) {
         this(eventType.getLevel(),shortMsg,longMessage);
@@ -45,6 +45,7 @@ public class UserError extends Model {
         this.shortError = shortError;
         this.message = message;
         this.timestamp = new Date().getTime();
+        this.save();
     }
 
     public long getTimestamp(){

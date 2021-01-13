@@ -199,7 +199,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     public static boolean blockTouches = false;
     private static boolean is_follower = false;
     private static boolean is_follower_set = false;
-    private static boolean is_holo = true;
+    private static final boolean is_holo = true;
     private static boolean reset_viewport = false;
     private boolean updateStuff;
     private boolean updatingPreviewViewport = false;
@@ -221,7 +221,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     private ImageButton btnCarbohydrates;
     private ImageButton btnBloodGlucose;
     private ImageButton buttonInsulinSingleDose;
-    private ImageButton[] btnInsulinDose = new ImageButton[MAX_INSULIN_PROFILES];
+    private final ImageButton[] btnInsulinDose = new ImageButton[MAX_INSULIN_PROFILES];
     private ImageButton btnTime;
     private ImageButton btnUndo;
     private ImageButton btnRedo;
@@ -230,7 +230,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     private TextView textCarbohydrates;
     private TextView textBloodGlucose;
     private TextView textInsulinSumDose;
-    private TextView[] textInsulinDose = new TextView[MAX_INSULIN_PROFILES];
+    private final TextView[] textInsulinDose = new TextView[MAX_INSULIN_PROFILES];
     private TextView textTime;
     private static final int REQ_CODE_SPEECH_INPUT = 1994;
     private static final int REQ_CODE_SPEECH_NOTE_INPUT = 1995;
@@ -1185,7 +1185,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     public String readTextFile(InputStream inputStream) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        byte buf[] = new byte[1024];
+        byte[] buf = new byte[1024];
         int len;
         try {
             while ((len = inputStream.read(buf)) != -1) {
@@ -1353,7 +1353,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         int end = allWords.indexOf(" uuid ");
         if (end > 0) {
             thisuuid = (end > 0 ? allWords.substring(0, end) : "");
-            allWords = allWords.substring(end + 6, allWords.length());
+            allWords = allWords.substring(end + 6);
         }
         byte[] RTL_BYTES = {(byte) 0xE2, (byte) 0x80, (byte) 0x8f}; // See https://stackoverflow.com/questions/21470476/why-is-e2808f-being-added-to-my-youtube-embed-code
 
@@ -1454,8 +1454,8 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
             case "rapid":
                 if (!insulinsumset && (thisnumber > 0)) {
                     thisInsulinSumNumber = thisnumber;
-                    textInsulinSumDose.setText(Double.toString(thisnumber) + " units");
-                    Log.d(TAG, "Rapid dose: " + Double.toString(thisnumber));
+                    textInsulinSumDose.setText(thisnumber + " units");
+                    Log.d(TAG, "Rapid dose: " + thisnumber);
                     textInsulinSumDose.setVisibility(View.VISIBLE);
                     if (!MultipleInsulins.isEnabled()) {
                         buttonInsulinSingleDose.setVisibility(View.VISIBLE); // show the button next to the single insulin dose if not using multiples
@@ -1569,8 +1569,8 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
                         }
                     if (!insulinset[number] && (thisnumber > 0)) {
                         thisinsulinnumber[number] = thisnumber;
-                        textInsulinDose[number].setText(Double.toString(thisnumber) + " " + insulin.getName());
-                        Log.d(TAG, insulin.getName() + " dose: " + Double.toString(thisnumber));
+                        textInsulinDose[number].setText(thisnumber + " " + insulin.getName());
+                        Log.d(TAG, insulin.getName() + " dose: " + thisnumber);
                         insulinset[number] = true;
                         btnInsulinDose[number].setVisibility(View.VISIBLE);
                         textInsulinDose[number].setVisibility(View.VISIBLE);
@@ -2967,7 +2967,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
                 display_delta = bgGraphBuilder.unitizedDeltaStringRaw(true, true, estimated_delta);
                 addDisplayDelta();
                 if (!Pref.getBoolean("show_noise_workings", false)) {
-                    notificationText.append("\nNoise: " + bgGraphBuilder.noiseString(BgGraphBuilder.last_noise));
+                    notificationText.append("\nNoise: " + BgGraphBuilder.noiseString(BgGraphBuilder.last_noise));
                 }
             } else {
                 addDisplayDelta();
@@ -3047,11 +3047,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         if (Pref.getBoolean("bg_to_speech_shortcut", false)) {
 
             menuItem.setVisible(true);
-            if (Pref.getBoolean("bg_to_speech", false)) {
-                menuItem.setChecked(true);
-            } else {
-                menuItem.setChecked(false);
-            }
+            menuItem.setChecked(Pref.getBoolean("bg_to_speech", false));
         } else {
             menuItem.setVisible(false);
         }
