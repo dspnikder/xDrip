@@ -18,6 +18,7 @@ import com.eveningoutpost.dexdrip.Models.Treatments;
 import com.eveningoutpost.dexdrip.Models.usererror.UserErrorLog;
 import com.eveningoutpost.dexdrip.R;
 import com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService;
+import com.eveningoutpost.dexdrip.Services.ob1.Ob1State;
 import com.eveningoutpost.dexdrip.UtilityModels.BgGraphBuilder;
 import com.eveningoutpost.dexdrip.UtilityModels.BroadcastGlucose;
 import com.eveningoutpost.dexdrip.UtilityModels.CollectionServiceStarter;
@@ -169,12 +170,12 @@ public class Ob1G5StateMachine {
 
                 }, throwable -> {
                     if (!(throwable instanceof OperationSuccess)) {
-                        if (((parent.getState() == Ob1G5CollectionService.STATE.CLOSED)
-                                || (parent.getState() == Ob1G5CollectionService.STATE.CLOSE))
+                        if (((parent.getState() == Ob1State.CLOSED)
+                                || (parent.getState() == Ob1State.CLOSE))
                                 && (throwable instanceof BleDisconnectedException)) {
                             UserErrorLog.d(TAG, "normal authentication notification throwable: (" + parent.getState() + ") " + throwable + " " + JoH.dateTimeText(tsl()));
                             parent.connectionStateChange(CLOSED_OK_TEXT);
-                        } else if ((parent.getState() == Ob1G5CollectionService.STATE.BOND) && (throwable instanceof TimeoutException)) {
+                        } else if ((parent.getState() == Ob1State.BOND) && (throwable instanceof TimeoutException)) {
                             // TODO Trigger on Error count / Android wear metric
                             // UserErrorLog.e(TAG,"Attempting to reset/create bond due to: "+throwable);
                             // parent.reset_bond(true);
@@ -185,18 +186,18 @@ public class Ob1G5StateMachine {
                             if (throwable instanceof BleCannotSetCharacteristicNotificationException
                                     || throwable instanceof BleGattCharacteristicException) {
                                 parent.tryGattRefresh();
-                                parent.changeState(Ob1G5CollectionService.STATE.SCAN);
+                                parent.changeState(Ob1State.SCAN);
                             }
                         }
                         if ((throwable instanceof BleDisconnectedException) || (throwable instanceof TimeoutException)) {
-                            if ((parent.getState() == Ob1G5CollectionService.STATE.BOND) || (parent.getState() == Ob1G5CollectionService.STATE.CHECK_AUTH)) {
+                            if ((parent.getState() == Ob1State.BOND) || (parent.getState() == Ob1State.CHECK_AUTH)) {
 
-                                if (parent.getState() == Ob1G5CollectionService.STATE.BOND) {
+                                if (parent.getState() == Ob1State.BOND) {
                                     UserErrorLog.d(TAG, "SLEEPING BEFORE RECONNECT");
                                     threadSleep(15000);
                                 }
                                 UserErrorLog.d(TAG, "REQUESTING RECONNECT");
-                                parent.changeState(Ob1G5CollectionService.STATE.SCAN);
+                                parent.changeState(Ob1State.SCAN);
                             }
                         }
                     }
@@ -230,7 +231,7 @@ public class Ob1G5StateMachine {
 
                 } else {
                     UserErrorLog.e(TAG, "Could not generate challenge hash! - resetting");
-                    parent.changeState(Ob1G5CollectionService.STATE.INIT);
+                    parent.changeState(Ob1State.INIT);
                     parent.incrementErrors();
                     return;
                 }
@@ -245,18 +246,18 @@ public class Ob1G5StateMachine {
 
                     if (parent.unBondAndStop) {
                         UserErrorLog.d(TAG,"Processing unbond and stop");
-                        parent.changeState(Ob1G5CollectionService.STATE.UNBOND);
+                        parent.changeState(Ob1State.UNBOND);
 
                     } else {
 
                         if (status.isBonded()) {
                             parent.msg("Authenticated");
                             parent.authResult(true);
-                            parent.changeState(Ob1G5CollectionService.STATE.GET_DATA);
+                            parent.changeState(Ob1State.GET_DATA);
                             throw new OperationSuccess("Authenticated");
                         } else {
                             //parent.unBond(); // bond must be invalid or not existing // WARN
-                            parent.changeState(Ob1G5CollectionService.STATE.PREBOND);
+                            parent.changeState(Ob1State.PREBOND);
                             // TODO what to do here?
                         }
                     }
@@ -281,7 +282,7 @@ public class Ob1G5StateMachine {
                     }
                     threadSleep(1000);
                 }
-                parent.changeState(Ob1G5CollectionService.STATE.BOND);
+                parent.changeState(Ob1State.BOND);
                 break;
 
             default:
@@ -679,7 +680,7 @@ public class Ob1G5StateMachine {
                     if (!(throwable instanceof OperationSuccess)) {
                         if (throwable instanceof BleDisconnectedException) {
                             UserErrorLog.d(TAG, "Disconnected when waiting to receive indication: " + throwable);
-                            parent.changeState(Ob1G5CollectionService.STATE.CLOSE);
+                            parent.changeState(Ob1State.CLOSE);
                         } else {
                             UserErrorLog.e(TAG, "Error receiving indication: " + throwable);
                             //throwable.printStackTrace();
@@ -736,7 +737,7 @@ public class Ob1G5StateMachine {
                 //  .subscribeOn(Schedulers.newThread())
                 .subscribe(disconnectValue -> {
                     if (d) UserErrorLog.d(TAG, "Wrote disconnect request");
-                    parent.changeState(Ob1G5CollectionService.STATE.CLOSE);
+                    parent.changeState(Ob1State.CLOSE);
                     throw new OperationSuccess("Requested Disconnect");
                 }, throwable -> {
                     if (!(throwable instanceof OperationSuccess)) {
@@ -748,7 +749,7 @@ public class Ob1G5StateMachine {
                             UserErrorLog.d(TAG, "Failed to write DisconnectTxMessage: " + throwable);
 
                         }
-                        parent.changeState(Ob1G5CollectionService.STATE.CLOSE);
+                        parent.changeState(Ob1State.CLOSE);
                     }
                 });
         UserErrorLog.d(TAG, "Disconnect NOW exit: " + JoH.dateTimeText(tsl()));
@@ -1135,11 +1136,11 @@ public class Ob1G5StateMachine {
                                         UserErrorLog.d(TAG, "Failure: " + unit.text + " " + JoH.dateTimeText(tsl()));
                                         if (throwable instanceof BleDisconnectedException) {
                                             UserErrorLog.d(TAG, "Disconnected: " + unit.text + " " + throwable);
-                                            parent.changeState(Ob1G5CollectionService.STATE.CLOSE);
+                                            parent.changeState(Ob1State.CLOSE);
                                         } else {
                                             UserErrorLog.e(TAG, "Failed to write: " + unit.text + " " + throwable);
                                         }
-                                        parent.changeState(Ob1G5CollectionService.STATE.CLOSE);
+                                        parent.changeState(Ob1State.CLOSE);
                                     } else {
                                         queued(parent, connection); // turtles all the way down
                                     }

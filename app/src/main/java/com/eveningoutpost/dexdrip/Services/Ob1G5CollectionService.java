@@ -41,6 +41,7 @@ import com.eveningoutpost.dexdrip.Models.JoH;
 import com.eveningoutpost.dexdrip.Models.Sensor;
 import com.eveningoutpost.dexdrip.Models.usererror.UserErrorLog;
 import com.eveningoutpost.dexdrip.R;
+import com.eveningoutpost.dexdrip.Services.ob1.Ob1State;
 import com.eveningoutpost.dexdrip.UtilityModels.BroadcastGlucose;
 import com.eveningoutpost.dexdrip.UtilityModels.CollectionServiceStarter;
 import com.eveningoutpost.dexdrip.UtilityModels.Constants;
@@ -97,16 +98,16 @@ import static com.eveningoutpost.dexdrip.G5Model.Ob1G5StateMachine.pendingStop;
 import static com.eveningoutpost.dexdrip.G5Model.Ob1G5StateMachine.usingAlt;
 import static com.eveningoutpost.dexdrip.Models.JoH.niceTimeScalar;
 import static com.eveningoutpost.dexdrip.Models.JoH.tsl;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.BOND;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.CLOSE;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.CLOSED;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.CONNECT;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.CONNECT_NOW;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.DISCOVER;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.GET_DATA;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.INIT;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.PREBOND;
-import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.SCAN;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.BOND;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.CLOSE;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.CLOSED;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.CONNECT;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.CONNECT_NOW;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.DISCOVER;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.GET_DATA;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.INIT;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.PREBOND;
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.SCAN;
 import static com.eveningoutpost.dexdrip.UtilityModels.Constants.G5_CALIBRATION_REQUEST;
 import static com.eveningoutpost.dexdrip.UtilityModels.Constants.G5_SENSOR_FAILED;
 import static com.eveningoutpost.dexdrip.UtilityModels.Constants.G5_SENSOR_RESTARTED;
@@ -160,8 +161,8 @@ public class Ob1G5CollectionService extends G5BaseService {
     private static final int DEFAULT_AUTOMATA_DELAY = 100;
     private static final String BUGGY_SAMSUNG_ENABLED = "buggy-samsung-enabled";
     private static final String STOP_SCAN_TASK_ID = "ob1-g5-scan-timeout_scan";
-    private static volatile STATE state = INIT;
-    private static volatile STATE last_automata_state = CLOSED;
+    private static volatile Ob1State state = INIT;
+    private static volatile Ob1State last_automata_state = CLOSED;
 
     private static RxBleClient rxBleClient;
     private static volatile PendingIntent pendingIntent;
@@ -235,38 +236,6 @@ public class Ob1G5CollectionService extends G5BaseService {
     private static final List<String> alwaysScanModelFamilies = Arrays.asList("SM-N910");
     private static final Set<String> alwaysConnectModels = Sets.newHashSet("G Watch");
     private static final Set<String> alwaysBuggyWakeupModels = Sets.newHashSet("Jelly-Pro", "SmartWatch 3");
-
-    // Internal process state tracking
-    public enum STATE {
-        INIT("Initializing"),
-        SCAN("Scanning"),
-        CONNECT("Waiting connect"),
-        CONNECT_NOW("Power connect"),
-        DISCOVER("Examining"),
-        CHECK_AUTH("Checking Auth"),
-        PREBOND("Bond Prepare"),
-        BOND("Bonding"),
-        UNBOND("UnBonding"),
-        RESET("Reseting"),
-        GET_DATA("Getting Data"),
-        CLOSE("Sleeping"),
-        CLOSED("Deep Sleeping");
-
-
-        private String str;
-
-        STATE(String custom) {
-            this.str = custom;
-        }
-
-        STATE() {
-            this.str = toString();
-        }
-
-        public String getString() {
-            return str;
-        }
-    }
 
     public void authResult(boolean good) {
         auth_succeeded = good;
@@ -342,7 +311,7 @@ public class Ob1G5CollectionService extends G5BaseService {
                             discover_services();
                         } else {
                             UserErrorLog.d(TAG, "Skipping discovery");
-                            changeState(STATE.CHECK_AUTH);
+                            changeState(Ob1State.CHECK_AUTH);
                         }
                         break;
                     case CHECK_AUTH:
@@ -436,15 +405,15 @@ public class Ob1G5CollectionService extends G5BaseService {
         changeState(INIT);
     }
 
-    public STATE getState() {
+    public Ob1State getState() {
         return state;
     }
 
-    public void changeState(STATE new_state) {
+    public void changeState(Ob1State new_state) {
         changeState(new_state, DEFAULT_AUTOMATA_DELAY);
     }
 
-    public void changeState(STATE new_state, int timeout) {
+    public void changeState(Ob1State new_state, int timeout) {
         if ((state == CLOSED || state == CLOSE) && new_state == CLOSE) {
             UserErrorLog.d(TAG, "Not closing as already closed");
         } else {
@@ -691,7 +660,7 @@ public class Ob1G5CollectionService extends G5BaseService {
         getBatteryStatusNow = true;
         if (JoH.ratelimit("reset-command", 1200)) {
             UserErrorLog.e(TAG, "Issuing reset command!");
-            changeState(STATE.RESET);
+            changeState(Ob1State.RESET);
         } else {
             UserErrorLog.e(TAG, "Reset command blocked by 20 minute timer");
         }
@@ -1363,7 +1332,7 @@ public class Ob1G5CollectionService extends G5BaseService {
                 if (!always_discover) {
                     do_discovery = false;
                 }
-                changeState(STATE.CHECK_AUTH);
+                changeState(Ob1State.CHECK_AUTH);
                 return;
             }
         }
