@@ -96,6 +96,7 @@ import static com.eveningoutpost.dexdrip.G5Model.Ob1G5StateMachine.pendingStart;
 import static com.eveningoutpost.dexdrip.G5Model.Ob1G5StateMachine.pendingStop;
 import static com.eveningoutpost.dexdrip.G5Model.Ob1G5StateMachine.usingAlt;
 import static com.eveningoutpost.dexdrip.Models.JoH.niceTimeScalar;
+import static com.eveningoutpost.dexdrip.Models.JoH.restartBluetooth;
 import static com.eveningoutpost.dexdrip.Models.JoH.tsl;
 import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.BOND;
 import static com.eveningoutpost.dexdrip.Services.Ob1G5CollectionService.STATE.CLOSE;
@@ -787,7 +788,7 @@ public class Ob1G5CollectionService extends G5BaseService {
         }
     }
 
-    public synchronized void unBond() {
+    public synchronized void r unBond() {
 
         UserErrorLog.d(TAG, "unBond() start");
         if (transmitterMAC == null) return;
@@ -1325,8 +1326,11 @@ public class Ob1G5CollectionService extends G5BaseService {
                 final long since_connecting = JoH.msSince(connecting_time);
                 if ((connecting_time > static_last_timestamp) && (since_connecting > Constants.SECOND_IN_MS * 310) && (since_connecting < Constants.SECOND_IN_MS * 620)) {
                     if (!always_scan) {
-                        UserErrorLog.e(TAG, "Connection time shows missed reading, switching to always scan, metric: " + niceTimeScalar(since_connecting));
-                        always_scan = true;
+                        unBond();
+                        CollectionServiceStarter.restartCollectionServiceBackground();
+                        break;
+                        //UserErrorLog.e(TAG, "Connection time shows missed reading, switching to always scan, metric: " + niceTimeScalar(since_connecting));
+                        //always_scan = true;
                     } else {
                         UserErrorLog.e(TAG, "Connection time shows missed reading, despite always scan, metric: " + niceTimeScalar(since_connecting));
                     }
