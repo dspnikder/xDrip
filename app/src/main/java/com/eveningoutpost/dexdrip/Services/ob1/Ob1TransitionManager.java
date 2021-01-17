@@ -2,6 +2,7 @@ package com.eveningoutpost.dexdrip.Services.ob1;
 
 import com.eveningoutpost.dexdrip.Models.usererror.UserErrorLog;
 import com.eveningoutpost.dexdrip.UtilityModels.RxBleProvider;
+import com.google.common.collect.Lists;
 import com.polidea.rxandroidble2.RxBleClient;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,7 +43,7 @@ public class Ob1TransitionManager extends LogAware {
                     handlers.put(INIT, new InitOb1Handler());
                     break;
                 case SCAN:
-                    handlers.put(state, new ScanOb1Handler());
+                    handlers.put(state, new ScanOb1Handler(Ob1State.SCAN, Lists.newArrayList(INIT,Ob1State.CONNECT_NOW)));
                     break;
             }
         }

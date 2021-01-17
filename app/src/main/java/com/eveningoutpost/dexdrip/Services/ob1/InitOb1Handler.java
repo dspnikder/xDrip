@@ -2,7 +2,12 @@ package com.eveningoutpost.dexdrip.Services.ob1;
 
 import com.eveningoutpost.dexdrip.UtilityModels.Pref;
 import com.eveningoutpost.dexdrip.UtilityModels.RxBleProvider;
+import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.INIT;
 import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.SCAN;
 
 /**
@@ -13,6 +18,9 @@ import static com.eveningoutpost.dexdrip.Services.ob1.Ob1State.SCAN;
  * @see AbstractOb1StateHandler
  */
 public class InitOb1Handler extends AbstractOb1StateHandler {
+    protected InitOb1Handler() {
+        super(INIT, Lists.newArrayList(SCAN));
+    }
 
     @Override
     public void execute() {
